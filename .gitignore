@@ -1,0 +1,31 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Models
+models/
+weights/
+checkpoints/
+runs/
+
+# ML files
+*.pt
+*.pth
+*.onnx
+
+# Data
+data/
+datasets/
+videos/
+*.mp4
+*.avi
+*.mov
+
+# Environment
+.env
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
