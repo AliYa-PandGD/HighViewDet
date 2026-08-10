@@ -1,18 +1,20 @@
-from config import YOLO_CONFIG, VIDEO_CONFIG, SHOW_PROCESSING_OUTPUT, DATA_RECORD_RATE, FRAME_SIZE, TRACK_MAX_AGE
 
 import datetime
 import time
-import numpy as np
-import imutils
 import cv2
 import os
 import csv
 import json
-from video_process import video_process
-from deep_sort import nn_matching
-from deep_sort.detection import Detection
-from deep_sort.tracker import Tracker
-from deep_sort import generate_detections as gdet
+from pathlib import Path
+
+
+
+from src.config.setting import(YOLO_CONFIG, VIDEO_CONFIG, DATA_RECORD_RATE, FRAME_SIZE, TRACK_MAX_AGE)
+from src.detection.yolo_detector import create_yolo_detector
+from src.processing.video_process import video_process
+from src.tracking.deep_sort import nn_matching
+from src.tracking.deep_sort.tracker import Tracker
+from src.tracking.deep_sort import generate_detections as gdet
 
 if FRAME_SIZE > 1920:
 	print("Frame size is too large!")
@@ -25,8 +27,6 @@ elif FRAME_SIZE < 480:
 IS_CAM = VIDEO_CONFIG["IS_CAM"]
 cap = cv2.VideoCapture(VIDEO_CONFIG["VIDEO_CAP"])
 
-# Initialize YOLO detector based on config
-from yolo_detector import create_yolo_detector
 
 model_version = YOLO_CONFIG.get("MODEL_VERSION", "yolov8m")
 device = YOLO_CONFIG.get("DEVICE", "cpu")

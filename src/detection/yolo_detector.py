@@ -1,14 +1,13 @@
 """
-YOLO Detector Wrapper - Supports YOLOv3, v4, v5, v8, v9, and v26+
+YOLO Detector Wrapper - Supports YOLOv8, v9, ...+
 Provides a unified interface for all YOLO versions
 Supports both online (auto-download) and local file loading
 """
 
-import numpy as np
-import cv2
+
 import os
 from ultralytics import YOLO
-from config import MIN_CONF
+from src.config.setting import MIN_CONF
 
 
 class YOLODetector:
