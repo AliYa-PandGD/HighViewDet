@@ -39,7 +39,7 @@ def _end_video(tracker, frame_count, movement_data_writer):
 			_record_movement_data(movement_data_writer, t)
 		
 
-def video_process(cap, frame_size, encoder, tracker, movement_data_writer, crowd_data_writer, detector_obj):
+def video_process(cap, frame_size, encoder, tracker, storage, detector_obj):
 	def _calculate_FPS():
 		t1 = time.time() - t0
 		VID_FPS = frame_count / t1

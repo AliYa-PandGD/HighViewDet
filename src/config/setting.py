@@ -15,7 +15,7 @@ VIDEO_CONFIG = {
 # For GPU support, change device from 'cpu' to 0 (or GPU device ID)
 YOLO_CONFIG = {
 	"MODEL_VERSION": "yolov8n",  # Change to yolov26, yolov9, etc.
-	"DEVICE": "cpu"              # Use "cpu" or GPU device ID (0, 1, etc.)
+	"DEVICE": 0              # Use "cpu" or GPU device ID (0, 1, etc.)
 }
 
 # Show individuals detected

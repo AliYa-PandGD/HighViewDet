@@ -15,6 +15,12 @@ from src.processing.video_process import video_process
 from src.tracking.deep_sort import nn_matching
 from src.tracking.deep_sort.tracker import Tracker
 from src.tracking.deep_sort import generate_detections as gdet
+from src.database.csv_storage import CSVStorage
+
+#create root path
+ROOT_DIR = Path(__file__).resolve().parents[2]
+#create storage
+storage = CSVStorage(ROOT_DIR)
 
 if FRAME_SIZE > 1920:
 	print("Frame size is too large!")
@@ -34,7 +40,7 @@ device = YOLO_CONFIG.get("DEVICE", "cpu")
 print(f"Loading {model_version}...")
 detector_obj = create_yolo_detector(
 	yolo_version=model_version,
-	device=device
+	device=device,
 )
 
 # Tracker parameters
@@ -46,35 +52,24 @@ if IS_CAM:
 	max_age = VIDEO_CONFIG["CAM_APPROX_FPS"] * TRACK_MAX_AGE
 else:
 	max_age=DATA_RECORD_RATE * TRACK_MAX_AGE
-	if max_age > 30:
-		max_age = 30
-model_filename = 'model_data/mars-small128.pb'
-encoder = gdet.create_box_encoder(model_filename, batch_size=1)
+
+
+tracker_model_filename = (
+    ROOT_DIR /
+    "models" /
+    "pretrained" /
+    "mars-small128.pb"
+)
+encoder = gdet.create_box_encoder(tracker_model_filename, batch_size=1)
 metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
 tracker = Tracker(metric, max_age=max_age)
-
-if not os.path.exists('processed_data'):
-	os.makedirs('processed_data')
-
-movement_data_file = open('processed_data/movement_data.csv', 'w') 
-crowd_data_file = open('processed_data/crowd_data.csv', 'w')
-
-movement_data_writer = csv.writer(movement_data_file)
-crowd_data_writer = csv.writer(crowd_data_file)
-
-if os.path.getsize('processed_data/movement_data.csv') == 0:
-	movement_data_writer.writerow(['Track ID', 'Entry time', 'Exit Time', 'Movement Tracks'])
-if os.path.getsize('processed_data/crowd_data.csv') == 0:
-	crowd_data_writer.writerow(['Time', 'Human Count', 'Social Distance violate', 'Restricted Entry', 'Abnormal Activity'])
 
 START_TIME = time.time()
 
 # Pass detector to video_process
-processing_FPS = video_process(cap, FRAME_SIZE, encoder, tracker, movement_data_writer, crowd_data_writer, detector_obj=detector_obj)
+processing_FPS = video_process(cap, FRAME_SIZE, encoder, tracker, storage, detector_obj=detector_obj)
 
 cv2.destroyAllWindows()
-movement_data_file.close()
-crowd_data_file.close()
 
 END_TIME = time.time()
 PROCESS_TIME = END_TIME - START_TIME
@@ -94,16 +89,18 @@ else:
 
 cap.release()
 
-video_data = {
-	"IS_CAM": IS_CAM,
-	"DATA_RECORD_FRAME" : DATA_RECORD_FRAME,
-	"VID_FPS" : VID_FPS,
-	"PROCESSED_FRAME_SIZE": FRAME_SIZE,
-	"TRACK_MAX_AGE": TRACK_MAX_AGE,
-	"START_TIME": START_TIME.strftime("%d/%m/%Y, %H:%M:%S"),
-	"END_TIME": END_TIME.strftime("%d/%m/%Y, %H:%M:%S")
-}
 
-with open('processed_data/video_data.json', 'w') as video_data_file:
-	json.dump(video_data, video_data_file)
+#write video data in /result/csv
+storage.save_video_info(
+    IS_CAM=IS_CAM,
+    DATA_RECORD_FRAME=DATA_RECORD_FRAME,
+    VID_FPS=VID_FPS,
+    FRAME_SIZE=FRAME_SIZE,
+    TRACK_MAX_AGE=TRACK_MAX_AGE,
+    START_TIME=START_TIME,
+    END_TIME=END_TIME
+)
+
+storage.close()
+
 
