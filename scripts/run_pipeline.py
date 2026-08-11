@@ -2,9 +2,6 @@
 import datetime
 import time
 import cv2
-import os
-import csv
-import json
 from pathlib import Path
 
 
@@ -21,13 +18,6 @@ from src.database.csv_storage import CSVStorage
 ROOT_DIR = Path(__file__).resolve().parents[1]
 #create storage
 storage = CSVStorage(ROOT_DIR)
-
-if FRAME_SIZE > 1920:
-	print("Frame size is too large!")
-	quit()
-elif FRAME_SIZE < 480:
-	print("Frame size is too small! You won't see anything")
-	quit()
 
 # Read from video
 IS_CAM = VIDEO_CONFIG["IS_CAM"]
