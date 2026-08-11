@@ -18,7 +18,7 @@ from src.tracking.deep_sort import generate_detections as gdet
 from src.database.csv_storage import CSVStorage
 
 #create root path
-ROOT_DIR = Path(__file__).resolve().parents[2]
+ROOT_DIR = Path(__file__).resolve().parents[1]
 #create storage
 storage = CSVStorage(ROOT_DIR)
 

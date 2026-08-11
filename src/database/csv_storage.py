@@ -112,15 +112,12 @@ class CSVStorage:
         )
 
 
-    def save_crowd(self,time,human_count,social_distance_violate,restricted_entry,abnormal_activity):
+    def save_crowd(self,time,human_count):
 
         self.crowd_writer.writerow(
             [
                 time,
                 human_count,
-                social_distance_violate,
-                restricted_entry,
-                abnormal_activity
             ]
         )
 
