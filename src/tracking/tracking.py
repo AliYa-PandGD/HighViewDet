@@ -1,10 +1,10 @@
 import numpy as np
 import cv2
-from config import MIN_CONF, NMS_THRESH
-from deep_sort.detection import Detection
+from src.config.setting import MIN_CONF, NMS_THRESH
+from .deep_sort.detection import Detection
 
 
-def detect_human(detector_obj, frame, encoder, tracker, time):
+def detect_human(detector_obj, frame, encoder, tracker,frame_time):
 	"""
 	Detect humans using ultralytics YOLO
 	"""
@@ -19,6 +19,7 @@ def detect_human(detector_obj, frame, encoder, tracker, time):
 			filtered_confidences = []
 			filtered_centroids = []
 
+			idxs = np.array(idxs).reshape(-1)
 			for i in idxs:
 				filtered_boxes.append(boxes[i])
 				filtered_confidences.append(confidences[i])
@@ -34,7 +35,7 @@ def detect_human(detector_obj, frame, encoder, tracker, time):
 					 for bbox, score, centroid, feature in zip(boxes, confidences, centroids, features)]
 
 			tracker.predict()
-			expired = tracker.update(detections, time)
+			expired = tracker.update(detections, frame_time)
 
 			tracked_bboxes = []
 			for track in tracker.tracks:
@@ -42,7 +43,7 @@ def detect_human(detector_obj, frame, encoder, tracker, time):
 					continue
 				tracked_bboxes.append(track)
 
-			return [tracked_bboxes, expired]
+			return tracked_bboxes, expired
 
-	return [[], []]
+	return [], []
 
