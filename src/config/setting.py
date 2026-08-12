@@ -1,8 +1,18 @@
 import datetime
+from pathlib import Path
+
+video_name = "Afternoon1.mp4"
 
 # Video Path
+ROOT_DIR = Path(__file__).resolve().parents[1]
+video_path = (
+    ROOT_DIR /
+    "data" /
+    "raw_video"/
+    f"{video_name}"
+)
 VIDEO_CONFIG = {
-	"VIDEO_CAP" : "videos/video.mp4",
+	"VIDEO_CAP" : video_path,
 	"IS_CAM" : False,
 	"CAM_APPROX_FPS": 3,
 	"HIGH_CAM": True,
@@ -14,8 +24,8 @@ VIDEO_CONFIG = {
 #                     yolov26n/s/m 
 # For GPU support, change device from 'cpu' to 0 (or GPU device ID)
 YOLO_CONFIG = {
-	"MODEL_VERSION": "yolov8n",  # Change to yolov26, yolov9, etc.
-	"DEVICE": 0              # Use "cpu" or GPU device ID (0, 1, etc.)
+	"MODEL_VERSION": "yolov8n.pt",  # Change to yolov26, yolov9, etc.
+	"DEVICE": "auto"              # Use "cpu" or GPU device ID (0, 1, etc.)
 }
 
 # Show individuals detected

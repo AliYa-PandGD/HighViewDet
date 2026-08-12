@@ -3,6 +3,7 @@ import datetime
 import time
 import cv2
 from pathlib import Path
+import torch
 
 
 
@@ -24,13 +25,33 @@ IS_CAM = VIDEO_CONFIG["IS_CAM"]
 cap = cv2.VideoCapture(VIDEO_CONFIG["VIDEO_CAP"])
 
 
-model_version = YOLO_CONFIG.get("MODEL_VERSION", "yolov8m")
+model_version = YOLO_CONFIG.get("MODEL_VERSION", "yolov8m.pt")
 device = YOLO_CONFIG.get("DEVICE", "cpu")
+
+#yolo model path
+model_path = (
+    ROOT_DIR /
+    "models" /
+    "pretrained" /
+    f"{model_version}"
+)
+
+if not model_path.exists():
+
+    raise FileNotFoundError(f"Missing YOLO model: {model_path}")
+
+
+device = YOLO_CONFIG.get("DEVICE","auto")
+
+if device == "auto":
+
+    device = (0 if torch.cuda.is_available() else "cpu")
+
 
 print(f"Loading {model_version}...")
 detector_obj = create_yolo_detector(
-	yolo_version=model_version,
-	device=device,
+	yolo_version=str(model_path),
+	device=device, # type: ignore
 )
 
 # Tracker parameters

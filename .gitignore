@@ -17,6 +17,7 @@ runs/
 data/
 datasets/
 videos/
+raw_videos/
 *.mp4
 *.avi
 *.mov
