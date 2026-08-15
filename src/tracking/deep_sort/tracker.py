@@ -77,7 +77,7 @@ class Tracker:
         expired = []
         for t in self.tracks:
             if t.is_recorded():
-                t.exit = time
+                t.exit_time = time
                 expired.append(t)
         self.tracks = [t for t in self.tracks if not t.is_deleted() and not t.is_recorded()]
 

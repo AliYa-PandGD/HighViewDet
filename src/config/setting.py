@@ -4,13 +4,21 @@ from pathlib import Path
 video_name = "Afternoon1.mp4"
 
 # Video Path
-ROOT_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = Path(__file__).resolve().parents[2]
 video_path = (
     ROOT_DIR /
     "data" /
     "raw_video"/
     f"{video_name}"
 )
+#Check Video Path
+if not video_path.exists():
+    raise FileNotFoundError(
+        f"Video not found: {video_path}"
+    )
+
+print("Video path:", video_path)
+
 VIDEO_CONFIG = {
 	"VIDEO_CAP" : video_path,
 	"IS_CAM" : False,

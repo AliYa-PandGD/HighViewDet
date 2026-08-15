@@ -81,9 +81,6 @@ class CSVStorage:
                 [
                     'Time',
                     'Human Count',
-                    'Social Distance violate',
-                    'Restricted Entry',
-                    'Abnormal Activity'
                 ]
             )
         if self.video_info_file_path.stat().st_size == 0:

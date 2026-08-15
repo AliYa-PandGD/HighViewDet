@@ -48,14 +48,7 @@ def _end_video(tracker, frame_count, storage):
 
 
 
-def video_process(
-    cap,
-    frame_size,
-    encoder,
-    tracker,
-    storage,
-    detector_obj
-):
+def video_process(cap,frame_size,encoder,tracker,storage,detector_obj):
 
     t0 = None
 
