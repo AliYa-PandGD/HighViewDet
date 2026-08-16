@@ -7,6 +7,9 @@ import cv2
 from src.tracking.tracking import detect_human
 from src.utils.colors import RGB_COLORS
 from src.utils.progress import progress
+from src.analysis.pose_estimate import PoseEstimator
+from src.analysis.head_pose import HeadPoseEstimator
+
 
 from src.config.setting import (
     SHOW_DETECT,
@@ -157,13 +160,24 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj):
 
 
 
-        humans_detected, expired = detect_human(
-            detector_obj,
-            frame,
-            encoder,
-            tracker,
-            record_time
-        )
+        humans_detected, expired = detect_human(detector_obj,frame,encoder,tracker,record_time)
+
+        #pose estimation and head estimation
+        pose_estimator = PoseEstimator()
+        head_pose_estimator = HeadPoseEstimator()
+        for track in humans_detected:
+
+            bbox = track.to_tlbr()
+
+            pose = pose_estimator.estimate(
+                frame,
+                bbox
+            )
+
+            head = head_pose_estimator.estimate(
+                frame,
+                bbox
+            )
 
 
 
