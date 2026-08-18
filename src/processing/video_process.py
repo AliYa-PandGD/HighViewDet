@@ -7,8 +7,7 @@ import cv2
 from src.tracking.tracking import detect_human
 from src.utils.colors import RGB_COLORS
 from src.utils.progress import progress
-from src.analysis.pose_estimate import PoseEstimator
-from src.analysis.head_pose import HeadPoseEstimator
+
 
 
 from src.config.setting import (
@@ -51,7 +50,7 @@ def _end_video(tracker, frame_count, storage):
 
 
 
-def video_process(cap,frame_size,encoder,tracker,storage,detector_obj):
+def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estimator):
 
     t0 = None
 
@@ -66,6 +65,9 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj):
     else:
 
         VID_FPS = cap.get(cv2.CAP_PROP_FPS)
+
+        if VID_FPS <= 0:
+            VID_FPS = 30
 
         DATA_RECORD_FRAME = int(
             VID_FPS / DATA_RECORD_RATE
@@ -162,22 +164,15 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj):
 
         humans_detected, expired = detect_human(detector_obj,frame,encoder,tracker,record_time)
 
-        #pose estimation and head estimation
-        pose_estimator = PoseEstimator()
-        head_pose_estimator = HeadPoseEstimator()
+
+        #Estimate the pose of confirmed trackes
+        pose_results = pose_estimator.estimate_batch(frame,humans_detected)
+
         for track in humans_detected:
 
-            bbox = track.to_tlbr()
+            if track.track_id in pose_results:
 
-            pose = pose_estimator.estimate(
-                frame,
-                bbox
-            )
-
-            head = head_pose_estimator.estimate(
-                frame,
-                bbox
-            )
+                track.pose = pose_results[track.track_id]
 
 
 
@@ -254,6 +249,9 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj):
             storage.save_crowd(
                 time=record_time,
                 human_count=human_count,
+                social_distance_violate=None,
+                restricted_entry=None,
+                abnormal_activity=None
             )
 
 

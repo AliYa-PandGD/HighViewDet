@@ -7,8 +7,9 @@ import torch
 
 
 
-from src.config.setting import(YOLO_CONFIG, VIDEO_CONFIG, DATA_RECORD_RATE, FRAME_SIZE, TRACK_MAX_AGE)
+from src.config.setting import(YOLO_CONFIG, VIDEO_CONFIG, DATA_RECORD_RATE, FRAME_SIZE, TRACK_MAX_AGE, POSE_CONFIG)
 from src.detection.yolo_detector import create_yolo_detector
+from src.analysis.pose_estimate import PoseEstimator
 from src.processing.video_process import video_process
 from src.tracking.deep_sort import nn_matching
 from src.tracking.deep_sort.tracker import Tracker
@@ -24,9 +25,13 @@ storage = CSVStorage(ROOT_DIR)
 IS_CAM = VIDEO_CONFIG["IS_CAM"]
 cap = cv2.VideoCapture(VIDEO_CONFIG["VIDEO_CAP"])
 
-
+#Load YOLO detection model
 model_version = YOLO_CONFIG.get("MODEL_VERSION", "yolov8m.pt")
 device = YOLO_CONFIG.get("DEVICE", "cpu")
+
+#Load pose detection model
+pose_model_version = POSE_CONFIG.get("MODEL_VERSION", "yolov8n-pose.pt")
+pose_model_device = POSE_CONFIG.get("DEVICE", "cpu")
 
 #yolo model path
 model_path = (
@@ -36,16 +41,36 @@ model_path = (
     f"{model_version}"
 )
 
+PoseDetection_path = (
+	ROOT_DIR /
+	"models" /
+    "pretrained" /
+    f"{pose_model_version}"
+)
+
+#check existing of mmodel files
 if not model_path.exists():
 
     raise FileNotFoundError(f"Missing YOLO model: {model_path}")
 
+if not PoseDetection_path.exists():
 
-device = YOLO_CONFIG.get("DEVICE","auto")
+    raise FileNotFoundError(f"Missing Pose detection model: {PoseDetection_path}")
 
-if device == "auto":
+def resolve_device(device):
 
-    device = (0 if torch.cuda.is_available() else "cpu")
+    if device == "auto":
+        return 0 if torch.cuda.is_available() else "cpu"
+
+    return device
+
+device = resolve_device(
+    YOLO_CONFIG["DEVICE"]
+)
+
+pose_device = resolve_device(
+    POSE_CONFIG["DEVICE"]
+)
 
 
 print(f"Loading {model_version}...")
@@ -53,6 +78,8 @@ detector_obj = create_yolo_detector(
 	yolo_version=str(model_path),
 	device=device, # type: ignore
 )
+print(f"Loading {PoseDetection_path}...")
+pose_estimator = PoseEstimator(model_path=str(PoseDetection_path),device=pose_model_device)
 
 # Tracker parameters
 max_cosine_distance = 0.7
@@ -78,7 +105,7 @@ tracker = Tracker(metric, max_age=max_age)
 START_TIME = time.time()
 
 # Pass detector to video_process
-processing_FPS = video_process(cap, FRAME_SIZE, encoder, tracker, storage, detector_obj=detector_obj)
+processing_FPS = video_process(cap, FRAME_SIZE, encoder, tracker, storage, detector_obj=detector_obj, pose_estimator=pose_estimator)
 
 cv2.destroyAllWindows()
 

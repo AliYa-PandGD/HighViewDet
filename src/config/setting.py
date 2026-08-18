@@ -35,6 +35,10 @@ YOLO_CONFIG = {
 	"MODEL_VERSION": "yolov8n.pt",  # Change to yolov26, yolov9, etc.
 	"DEVICE": "auto"              # Use "cpu" or GPU device ID (0, 1, etc.)
 }
+POSE_CONFIG = {
+    "MODEL_VERSION": "yolo26n-pose.pt",  # Change to yolov26, yolov9, etc.
+    "DEVICE": "auto"              # Use "cpu" or GPU device ID (0, 1, etc.)
+}
 
 # Show individuals detected
 SHOW_PROCESSING_OUTPUT = True

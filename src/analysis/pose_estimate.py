@@ -10,19 +10,28 @@ class PoseEstimator:
         self.device = device
 
 
-    def estimate(self, frame, bbox):
+    def estimate_batch(self, frame, humans_detected):
+        """
+        x1, y1, x2, y2 = map(float, bbox)
 
-        x1, y1, x2, y2 = bbox
+        #control if a person is close to the edge
+        x1 = max(0, x1)
+        y1 = max(0, y1)
 
-        crop = frame[
-            y1:y2,
-            x1:x2
-        ]
+        x2 = min(frame.shape[1], x2)
+        y2 = min(frame.shape[0], y2)
 
-        results = self.model(
-            crop,
-            device=self.device,
-            verbose=False
-        )
+        if x2 <= x1 or y2 <= y1:
+            return None
 
-        return results
+        person_crop = frame[y1:y2,x1:x2]
+
+        results = self.model(person_crop,device=self.device,verbose=False)
+
+        if result.keypoints is None:
+            return None
+        
+        return result
+        """
+
+        return None
