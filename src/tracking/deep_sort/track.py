@@ -88,6 +88,18 @@ class Track:
         self.entry_time = entry_time
         self.exit_time = None
 
+        # Pose estimation results
+        self.pose = None
+
+        # Body orientation estimation
+        self.body_orientation = None
+
+        # Head pose estimation
+        self.head_pose = None
+
+        # Billboard attention score
+        self.attention_score = None
+
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
         width, height)`.

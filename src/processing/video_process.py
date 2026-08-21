@@ -10,6 +10,7 @@ from src.utils.progress import progress
 
 
 
+
 from src.config.setting import (
     SHOW_DETECT,
     DATA_RECORD,
@@ -50,7 +51,7 @@ def _end_video(tracker, frame_count, storage):
 
 
 
-def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estimator):
+def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estimator,body_orientation_estimator):
 
     t0 = None
 
@@ -168,11 +169,51 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
         #Estimate the pose of confirmed trackes
         pose_results = pose_estimator.estimate_batch(frame,humans_detected)
 
+        # Attach pose and calculate body orientation
         for track in humans_detected:
 
-            if track.track_id in pose_results:
 
-                track.pose = pose_results[track.track_id]
+            if track.track_id not in pose_results:
+                continue
+
+
+            # Save pose
+            track.pose = pose_results[
+                track.track_id
+            ]
+
+
+            # Bounding box
+            bbox = list(
+                map(
+                    int,
+                    track.to_tlbr().tolist()
+                )
+            )
+
+
+            # Estimate body orientation
+            body_orientation = body_orientation_estimator.estimate(
+                track.pose,
+                bbox
+            )
+
+            if body_orientation is not None:
+                #temporary debug
+                print(
+                    f"ID:{track.track_id} "
+                    f"confidence:{body_orientation['pose_confidence']:.2f}"
+                )
+                track.body_orientation = body_orientation
+
+            else:
+                #temporary debug
+                print(
+                    f"ID:{track.track_id} no pose"
+                )
+                track.body_orientation = None
+
+
 
 
 
@@ -248,10 +289,7 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
 
             storage.save_crowd(
                 time=record_time,
-                human_count=human_count,
-                social_distance_violate=None,
-                restricted_entry=None,
-                abnormal_activity=None
+                human_count=human_count
             )
 
 

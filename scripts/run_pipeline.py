@@ -15,6 +15,7 @@ from src.tracking.deep_sort import nn_matching
 from src.tracking.deep_sort.tracker import Tracker
 from src.tracking.deep_sort import generate_detections as gdet
 from src.database.csv_storage import CSVStorage
+from src.analysis.body_orientation import BodyOrientationEstimator
 
 #create root path
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -27,11 +28,9 @@ cap = cv2.VideoCapture(VIDEO_CONFIG["VIDEO_CAP"])
 
 #Load YOLO detection model
 model_version = YOLO_CONFIG.get("MODEL_VERSION", "yolov8m.pt")
-device = YOLO_CONFIG.get("DEVICE", "cpu")
 
 #Load pose detection model
 pose_model_version = POSE_CONFIG.get("MODEL_VERSION", "yolov8n-pose.pt")
-pose_model_device = POSE_CONFIG.get("DEVICE", "cpu")
 
 #yolo model path
 model_path = (
@@ -65,11 +64,11 @@ def resolve_device(device):
     return device
 
 device = resolve_device(
-    YOLO_CONFIG["DEVICE"]
+    YOLO_CONFIG.get("DEVICE", "cpu")
 )
 
 pose_device = resolve_device(
-    POSE_CONFIG["DEVICE"]
+    POSE_CONFIG.get("DEVICE", "cpu")
 )
 
 
@@ -79,7 +78,10 @@ detector_obj = create_yolo_detector(
 	device=device, # type: ignore
 )
 print(f"Loading {PoseDetection_path}...")
-pose_estimator = PoseEstimator(model_path=str(PoseDetection_path),device=pose_model_device)
+pose_estimator = PoseEstimator(model_path=str(PoseDetection_path),device=pose_device)
+
+#creating body_orientation_estimator
+body_orientation_estimator = BodyOrientationEstimator()
 
 # Tracker parameters
 max_cosine_distance = 0.7
@@ -105,7 +107,8 @@ tracker = Tracker(metric, max_age=max_age)
 START_TIME = time.time()
 
 # Pass detector to video_process
-processing_FPS = video_process(cap, FRAME_SIZE, encoder, tracker, storage, detector_obj=detector_obj, pose_estimator=pose_estimator)
+processing_FPS = video_process(cap, FRAME_SIZE, encoder, tracker, storage, detector_obj=detector_obj, pose_estimator=pose_estimator,
+                               body_orientation_estimator=body_orientation_estimator)
 
 cv2.destroyAllWindows()
 
