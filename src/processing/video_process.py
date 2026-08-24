@@ -7,6 +7,7 @@ import cv2
 from src.tracking.tracking import detect_human
 from src.utils.colors import RGB_COLORS
 from src.utils.progress import progress
+from src.utils.pose_visualizer import draw_pose_batch
 
 
 
@@ -173,6 +174,10 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
         for track in humans_detected:
 
 
+            track.pose = None
+            track.body_orientation = None
+
+
             if track.track_id not in pose_results:
                 continue
 
@@ -214,7 +219,8 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
                 track.body_orientation = None
 
 
-
+        #visualize pose detection
+        frame = draw_pose_batch(frame,humans_detected)
 
 
         # Save finished tracks
