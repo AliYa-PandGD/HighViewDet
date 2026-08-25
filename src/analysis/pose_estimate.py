@@ -1,5 +1,4 @@
 from ultralytics import YOLO
-import numpy as np
 
 
 class PoseEstimator:
@@ -14,44 +13,46 @@ class PoseEstimator:
         self.device = device
 
 
-
-    def estimate_batch(self,frame,tracks):
+    def estimate_batch(
+        self,
+        frame,
+        tracks
+    ):
 
         """
         Estimate pose for multiple tracked people.
 
         Parameters:
             frame:
-                Original image/frame
+                Original high-resolution frame
 
             tracks:
-                List of Deep SORT Track objects
+                List of confirmed Deep SORT tracks
 
         Returns:
-            Dictionary:
             {
                 track_id:
-                    {
-                        "keypoints": ndarray,
-                        "confidence": ndarray
-                    }
+                {
+                    "keypoints": ndarray,
+                    "confidence": ndarray
+                }
             }
         """
 
-        crops = []
-        track_ids = []
+
+        batch_data = []
 
 
         frame_height, frame_width = frame.shape[:2]
 
 
-        # Create person crops
+        # Create person crops and store metadata together
         for track in tracks:
 
 
             x1, y1, x2, y2 = map(
                 int,
-                track.to_tlbr()
+                track.original_bbox
             )
 
 
@@ -74,36 +75,79 @@ class PoseEstimator:
             ]
 
 
-            crops.append(crop)
-            track_ids.append(track.track_id)
+            batch_data.append(
+                {
+                    "track_id": track.track_id,
+                    "crop": crop,
+                    "offset": (x1, y1)
+                }
+            )
 
 
-
-        if len(crops) == 0:
+        if len(batch_data) == 0:
             return {}
 
 
 
+        # Prepare batch for YOLO
+        crops = [
+            item["crop"]
+            for item in batch_data
+        ]
+
+
         # Batch inference
-        results = self.model(crops,device=self.device,verbose=False)
+        results = self.model(
+            crops,
+            device=self.device,
+            verbose=False
+        )
 
 
 
         pose_results = {}
 
 
-        # Match result with track ID
-        for track_id, result in zip(track_ids,results):
+
+        # Match results with tracks
+        for item, result in zip(
+            batch_data,
+            results
+        ):
 
 
-            if result.keypoints is None:
+            if (
+                result.keypoints is None
+                or result.keypoints.xy.shape[0] == 0
+            ):
                 continue
+
+
+
+            track_id = item["track_id"]
+
+
+            x_offset, y_offset = item["offset"]
+
+
+
+            keypoints = (
+                result.keypoints.xy
+                .cpu()
+                .numpy()
+            )
+
+
+            # Convert crop coordinates
+            # to original frame coordinates
+            keypoints[:, :, 0] += x_offset
+            keypoints[:, :, 1] += y_offset
+
 
 
             pose_results[track_id] = {
 
-                "keypoints":
-                    result.keypoints.xy.cpu().numpy(),
+                "keypoints": keypoints,
 
                 "confidence":
                     result.keypoints.conf.cpu().numpy()

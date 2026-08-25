@@ -99,7 +99,7 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
     while True:
 
 
-        ret, frame = cap.read()
+        ret, original_frame = cap.read()
 
 
 
@@ -143,8 +143,8 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
 
 
 
-        frame = imutils.resize(
-            frame,
+        lower_res_frame = imutils.resize(
+            original_frame,
             width=frame_size
         )
 
@@ -164,11 +164,40 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
 
 
 
-        humans_detected, expired = detect_human(detector_obj,frame,encoder,tracker,record_time)
+        humans_detected, expired = detect_human(detector_obj,lower_res_frame,encoder,tracker,record_time)
+
+        #Convert coordination of tracks on Low resolution frame to the original video resolution
+        tracking_h, tracking_w = lower_res_frame.shape[:2]
+
+        original_h, original_w = original_frame.shape[:2]
+
+
+        scale_x = original_w / tracking_w
+        scale_y = original_h / tracking_h
+
+        for track in humans_detected:
+
+            x1, y1, x2, y2 = map(
+                int,
+                track.to_tlbr().tolist()
+            )
+
+
+            original_bbox = [
+                int(x1 * scale_x),
+                int(y1 * scale_y),
+                int(x2 * scale_x),
+                int(y2 * scale_y)
+            ]
+
+
+            track.original_bbox = original_bbox
+
+
 
 
         #Estimate the pose of confirmed trackes
-        pose_results = pose_estimator.estimate_batch(frame,humans_detected)
+        pose_results = pose_estimator.estimate_batch(original_frame,humans_detected)
 
         # Attach pose and calculate body orientation
         for track in humans_detected:
@@ -189,12 +218,7 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
 
 
             # Bounding box
-            bbox = list(
-                map(
-                    int,
-                    track.to_tlbr().tolist()
-                )
-            )
+            bbox = track.original_bbox
 
 
             # Estimate body orientation
@@ -220,7 +244,7 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
 
 
         #visualize pose detection
-        frame = draw_pose_batch(frame,humans_detected)
+        frame = draw_pose_batch(original_frame,humans_detected)
 
 
         # Save finished tracks
@@ -237,10 +261,7 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
         for track in humans_detected:
 
 
-            x, y, w, h = map(
-                int,
-                track.to_tlbr().tolist()
-            )
+            x, y, w, h = track.original_bbox
 
 
             track_id = track.track_id
@@ -302,9 +323,14 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
 
         if SHOW_PROCESSING_OUTPUT:
 
+            display_frame = imutils.resize(
+                frame,
+                width=1280
+            )
+
             cv2.imshow(
                 "Processed Output",
-                frame
+                display_frame
             )
 
         else:
