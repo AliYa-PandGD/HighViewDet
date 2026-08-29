@@ -3,6 +3,8 @@ import datetime
 
 import imutils
 import cv2
+import tkinter as tk
+
 
 from src.tracking.tracking import detect_human
 from src.utils.colors import RGB_COLORS
@@ -50,6 +52,24 @@ def _end_video(tracker, frame_count, storage):
                 track
             )
 
+
+def resize_for_display(frame, max_width, max_height):
+
+        height, width = frame.shape[:2]
+
+        scale = min(
+            max_width / width,
+            max_height / height,
+            1.0
+        )
+
+        new_width = int(width * scale)
+        new_height = int(height * scale)
+
+        return cv2.resize(
+            frame,
+            (new_width, new_height)
+        )
 
 
 def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estimator,body_orientation_estimator):
@@ -321,11 +341,23 @@ def video_process(cap,frame_size,encoder,tracker,storage,detector_obj,pose_estim
 
 
 
+        
+
         if SHOW_PROCESSING_OUTPUT:
 
-            display_frame = imutils.resize(
+            # get the display resoution 
+            root = tk.Tk()
+
+            screen_width = root.winfo_screenwidth()
+            screen_height = root.winfo_screenheight()
+
+            root.destroy()
+
+            # adjust the video to the monitor size
+            display_frame = resize_for_display(
                 frame,
-                width=1280
+                screen_width,
+                screen_height
             )
 
             cv2.imshow(
