@@ -259,18 +259,7 @@ def draw_single_pose(
     # Track information
     # -----------------------------
 
-    cv2.putText(
-        frame,
-        f"ID:{track.track_id}",
-        (
-            center[0],
-            center[1] - 20
-        ),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.7,
-        (255,255,255),
-        2
-    )
+    
 
 
 

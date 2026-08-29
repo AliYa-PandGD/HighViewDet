@@ -1,0 +1,20 @@
+BILLBOARD_CONFIG = {
+
+    "WIDTH": 6.0,
+    "HEIGHT": 3.0,
+
+    "BOTTOM_HEIGHT": 3.0,
+    "TOP_HEIGHT": 6.0,
+
+    "CAMERA_HEIGHT": 6.0,
+    "CAMERA_HORIZONTAL_OFFSET": 0.0,
+    "CAMERA_DISTANCE": 0.20,
+
+    "CAMERA_PITCH": -7.5,
+    "CAMERA_YAW": 0.0,
+    "CAMERA_ROLL": 0.5,
+
+    "FOV_DEGREES": 84.0,
+
+    "GROUND_FLAT": True
+}
